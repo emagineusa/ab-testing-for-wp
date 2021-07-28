@@ -6,6 +6,12 @@ class OptionsManager {
 
     private $optionsKey = 'ab-testing-for-wp-options';
 
+    private $defaultOptions = array(
+        'renderMethod' => 'server',
+        'lastMigration' => false,
+        'completedOnboarding' => false,
+    );
+
     public function __construct() {
         // figure out defaults
         $allOptions = $this->getAllOptions();
@@ -38,11 +44,10 @@ class OptionsManager {
     }
 
     public function getAllOptions() {
-        return get_option($this->optionsKey, []);
+        return get_option($this->optionsKey, $this->defaultOptions);
     }
 
     private function saveOptions($options) {
         update_option($this->optionsKey, $options, true);
     }
-
 }

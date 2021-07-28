@@ -10,9 +10,12 @@ class RegisterAdminPage {
     public function __construct($fileRoot) {
         $this->abTestManager = new ABTestManager();
         $this->fileRoot = $fileRoot;
+        $this->optionsManager = new OptionsManager();
+        $this->options = $this->optionsManager->getAllOptions();
 
         add_action('admin_menu', [$this, 'menu']);
         add_action('current_screen', [$this, 'screenLoad']);
+        add_action('admin_init', array( $this, 'register_settings' ) );
     }
 
     public function screenLoad() {
@@ -134,6 +137,15 @@ class RegisterAdminPage {
 
         add_submenu_page(
             'ab-testing-for-wp',
+            __('Settings', 'ab-testing-for-wp'),
+            __('Settings', 'ab-testing-for-wp'),
+            'manage_options',
+            'ab-testing-for-wp_settings',
+            [$this, 'settings']
+        );
+
+        add_submenu_page(
+            'ab-testing-for-wp',
             __('Advanced Options', 'ab-testing-for-wp'),
             __('Advanced Options', 'ab-testing-for-wp'),
             'manage_options',
@@ -175,4 +187,40 @@ class RegisterAdminPage {
         require $this->srcRoot . 'php/pages/advanced.php';
     }
 
+    public function settings() {
+        require $this->srcRoot . 'php/pages/settings.php';
+    }
+
+    public function register_settings() {
+        register_setting( 'ab-testing-for-wp', 'ab-testing-for-wp-options' );
+
+        add_settings_section(
+            'ab-testing-for-wp-settings-section',
+            '',
+            array( $this, 'settings_section_callback' ),
+            'ab-testing-for-wp'
+        );
+    }
+
+    public function settings_section_callback() {
+        $renderMethod = $this->options['renderMethod'] ? $this->options['renderMethod'] : 'server';
+        ?>
+        <div class="card">
+            <label><h2><?php esc_html_e( 'Render Method', 'ab-testing-for-wp' ); ?></h2></label>
+            <p class="description"><?php esc_html_e( 'Change this setting to "Client-side Rendering" if you notice that the same variants are being shown to all users. This can happen if your website has page caching enabled.', 'ab-testing-for-wp' ); ?></p>
+            <p>
+                <label for="ab-render-method-server">
+                    <input id="ab-render-method-server" name="ab-testing-for-wp-options[renderMethod]" value="server" type="radio" <?php checked( $renderMethod, 'server' ); ?>>
+                    <?php esc_html_e( 'Server-Side Render (PHP)', 'ab-testing-for-wp' ); ?>
+                </label>
+                <label for="ab-render-method-client">
+                    <input id="ab-render-method-client" name="ab-testing-for-wp-options[renderMethod]" value="client" type="radio" <?php checked( $renderMethod, 'client' ); ?>>
+                    <?php esc_html_e( 'Client-Side Render (JS)', 'ab-testing-for-wp' ); ?>
+                </label>
+            </p>
+        </div>
+        <input name="ab-testing-for-wp-options[lastMigration]" type="hidden" value="<?php echo esc_attr( $this->options['lastMigration'] ); ?>">
+        <input name="ab-testing-for-wp-options[completedOnboarding]" type="hidden" value="<?php echo esc_attr( $this->options['completedOnboarding'] ); ?>">
+        <?php
+    }
 }
