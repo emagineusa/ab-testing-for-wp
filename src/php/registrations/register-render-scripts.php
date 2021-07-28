@@ -28,6 +28,8 @@ class RegisterRenderScripts {
         wp_localize_script('ab-testing-for-wp-frontend', 'ABTestingForWP', $data);
 
         wp_enqueue_script('ab-testing-for-wp-frontend');
+
+        wp_enqueue_style('ab-testing-for-wp-frontend', plugins_url('/src/css/frontend.css', $this->fileRoot), []);
     }
 
 }
