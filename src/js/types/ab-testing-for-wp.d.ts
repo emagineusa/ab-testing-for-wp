@@ -61,6 +61,7 @@ declare interface ABTestResult {
 
 declare interface TestVariant {
   id: string;
+  html: string;
   conversions: number;
   participants: number;
   leading: boolean;
