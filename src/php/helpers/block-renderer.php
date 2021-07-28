@@ -4,6 +4,12 @@ namespace ABTestingForWP;
 
 class BlockRenderer {
 
+    public function __construct() {
+        $this->optionsManager = new OptionsManager();
+        $this->renderMethod = $this->optionsManager->getOption('renderMethod', 'server');
+        $this->useClientSideRender = 'client' === $this->renderMethod;
+    }
+
     private function randomTestDistributionPosition($variants) {
         $max = array_reduce(
             $variants,
@@ -127,6 +133,7 @@ class BlockRenderer {
     }
 
     public function resolveVariant($request) {
+
         if (!$request->get_param('test')) {
             return new \WP_Error('rest_invalid_request', 'Missing test parameter.', ['status' => 400]);
         }
@@ -202,7 +209,7 @@ class BlockRenderer {
         }
 
         // skip parsing HTML if variation already picked or control and variant not provided
-        if ($variantId === $skipVariation && !$forcedVariant) {
+        if (!$this->useClientSideRender && $variantId === $skipVariation && !$forcedVariant) {
             return rest_ensure_response([ 'id' => $variantId ]);
         }
 
@@ -212,6 +219,7 @@ class BlockRenderer {
         return rest_ensure_response([
             'id' => $variantId,
             'html' => $variantContent,
+            'cookieName' => CookieManager::nameById($testId),
         ]);
     }
 
