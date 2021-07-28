@@ -77,7 +77,7 @@ class PostsActions {
             'post_type' => $type,
             'post__not_in' => $notIn,
             'post_status' => ['publish'],
-            'numberposts' => -1,
+            'posts_per_page' => -1,
         ]);
 
         if ($query->have_posts()) {
