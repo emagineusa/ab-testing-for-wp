@@ -10,16 +10,14 @@ class GoalActions {
     }
 
     public function getGoalTypes() {
-        $types = get_post_types(
+        $postTypes = get_post_types(
             [
                 'public' => true,
             ],
             'objects'
         );
 
-        $allowedTypes = [];
-
-        $strings = [
+        $strings = apply_filters('ab-testing-for-wp_goal-type-strings', [
             'post' => [
                 'itemName' => __('Post', 'ab-testing-for-wp'),
                 'help' => __('Goal post for this test. If the visitor lands on this post it will add a point to the tested variant.', 'ab-testing-for-wp'),
@@ -28,15 +26,28 @@ class GoalActions {
                 'itemName' => __('Page', 'ab-testing-for-wp'),
                 'help' => __('Goal page for this test. If the visitor lands on this page it will add a point to the tested variant.', 'ab-testing-for-wp'),
             ],
-        ];
+        ]);
 
-        foreach ($types as $key => $type) {
-            // only allow posts and pages
-            if ($key !== 'post' && $key !== 'page') continue;
-            array_push($allowedTypes, array_merge(['name' => $type->name, 'label' => $type->label], $strings[$key]));
+        // Array of post type slugs to exclude from from the Goal dropdown in block settings.
+        $postTypesToExclude = apply_filters('ab-testing-for-wp_post-types-to-exclude', ['attachment', 'abt4wp-test']);
+
+        // Loop over all public post types and add them to the Goal List.
+        $allowedGoalTypes = [];
+        foreach ($postTypes as $slug => $postType) {
+            // Skip excluded post types.
+            if (in_array($slug, $postTypesToExclude)) {
+                continue;
+            }
+
+            array_push($allowedGoalTypes, [
+                'name' => $slug,
+                'label' => $postType->label,
+                'itemName' => ! empty( $strings[ $slug ]['itemName'] ) ? $strings[ $slug ]['itemName'] : $postType->label,
+                'help' => ! empty( $strings[ $slug ]['help'] ) ? $strings[ $slug ]['help'] : $strings['post']['help'],
+            ]);
         }
 
-        array_push($allowedTypes, [
+        array_push($allowedGoalTypes, [
             'name' => 'outbound',
             'label' => __('Outbound link', 'ab-testing-for-wp'),
             'itemName' => __('Visitor goes to', 'ab-testing-for-wp'),
@@ -45,9 +56,9 @@ class GoalActions {
             'text' => true,
         ]);
 
-        $allowedTypes = apply_filters('ab-testing-for-wp_goal-types', $allowedTypes);
+        $allowedGoalTypes = apply_filters('ab-testing-for-wp_goal-types', $allowedGoalTypes);
 
-        return rest_ensure_response($allowedTypes);
+        return rest_ensure_response($allowedGoalTypes);
     }
 
 }
