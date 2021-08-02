@@ -1,5 +1,6 @@
 import apiFetch from '@wordpress/api-fetch';
 import Cookies from 'js-cookie';
+import { nanoid } from 'nanoid';
 
 import doNotTrack from './doNotTrack';
 
@@ -28,7 +29,7 @@ function handleTestRender(): void {
       loadTestHTML(test, html);
     } else {
       let hasCookie = false;
-      let path = `ab-testing-for-wp/v1/ab-test?test=${testId}`;
+      let path = `ab-testing-for-wp/v1/ab-test?test=${testId}&nocache=${nanoid()}`;
       const variantId: string = Cookies.get(cookieName);
 
       if (variantId) {

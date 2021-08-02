@@ -1,5 +1,5 @@
 import React, { Component, createRef } from 'react';
-import shortid from 'shortid';
+import { nanoid } from 'nanoid';
 
 type TestPreviewProps = {
   html: string;
@@ -8,7 +8,7 @@ type TestPreviewProps = {
 class TestPreview extends Component<TestPreviewProps> {
   iframeRef = createRef<HTMLIFrameElement>();
 
-  tempId: string = shortid.generate();
+  tempId: string = nanoid();
 
   componentDidMount(): void {
     const { html } = this.props;

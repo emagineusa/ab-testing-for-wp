@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import shortid from 'shortid';
+import { nanoid } from 'nanoid';
 import queryString from 'query-string';
 
 import { __, sprintf } from '@wordpress/i18n';
@@ -179,7 +179,7 @@ class ABTestBlock extends Component<ABTestBlockProps, ABTestBlockState> {
     if (!id) {
       const defaultVariants: ABTestVariant[] = [
         {
-          id: shortid.generate(),
+          id: nanoid(),
           name: 'A',
           selected: true,
           distribution: 50,
@@ -187,7 +187,7 @@ class ABTestBlock extends Component<ABTestBlockProps, ABTestBlockState> {
           conditions: [],
         },
         {
-          id: shortid.generate(),
+          id: nanoid(),
           name: 'B',
           selected: false,
           distribution: 50,
@@ -200,7 +200,7 @@ class ABTestBlock extends Component<ABTestBlockProps, ABTestBlockState> {
       const postTitle = getCurrentPost<{ title: string }>().title;
 
       setAttributes({
-        id: shortid.generate(),
+        id: nanoid(),
         variants: defaultVariants,
         postGoal: '',
         postGoalType: '',
