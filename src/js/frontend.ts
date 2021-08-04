@@ -1,12 +1,8 @@
-// import handleTestRender from './frontend/handleTestRender';
-// import handleTestTracking from './frontend/handleTestTracking';
 import ABTest from './frontend/ABTest';
 
 function onLoad(): void {
-  // handleTestRender();
-  // handleTestTracking();
-  const testBlocks = [...document.querySelectorAll('.ABTestWrapper')];
-  testBlocks.map((block) => new ABTest(block));
+  const testBlocks = Array.from(document.querySelectorAll('.ABTestWrapper'));
+  testBlocks.map((block) => new ABTest((block as HTMLElement)));
 }
 
 document.addEventListener('DOMContentLoaded', onLoad);

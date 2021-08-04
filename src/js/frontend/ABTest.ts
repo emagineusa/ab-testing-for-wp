@@ -27,7 +27,10 @@ export default class ABTest implements ABTestInterface {
       this.localStorageKey = `${this.cookieName}_html`;
     }
 
-    this.handleRender();
+    this.handleRender()
+      .then(() => {
+        this.handleTracking();
+      });
   }
 
   handleRender = async (): Promise<boolean> => {
@@ -80,7 +83,27 @@ export default class ABTest implements ABTestInterface {
     return true;
   }
 
-  handleTracking = (): void => {
+  sendBeacon = (url: string | undefined): void => {
+    if (url && (!navigator.sendBeacon || !ABTestingForWP.restUrl)) {
+      navigator.sendBeacon(`${ABTestingForWP.restUrl}ab-testing-for-wp/v1/outbound?nocache=${nanoid()}`, JSON.stringify({ url }));
+    }
+  }
 
+  handleTracking = (): void => {
+    apiFetch({ path: `ab-testing-for-wp/v1/track?post=${ABTestingForWP.postId}&nocache=${nanoid()}` });
+
+    const anchors = Array.from(this.blockEl.querySelectorAll('a'));
+    anchors.forEach((anchor) => {
+      anchor.addEventListener('click', () => {
+        this.sendBeacon(anchor.href);
+      });
+    });
+
+    const forms = Array.from(this.blockEl.querySelectorAll('form'));
+    forms.forEach((form) => {
+      form.addEventListener('submit', () => {
+        this.sendBeacon(form.action);
+      });
+    });
   }
 }

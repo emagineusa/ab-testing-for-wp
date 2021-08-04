@@ -219,7 +219,8 @@ class BlockRenderer {
         return rest_ensure_response([
             'id' => $variantId,
             'html' => $variantContent,
-            'cookieName' => CookieManager::nameById($testId),
+            'controlVariant' => $controlVariant,
+            'testData' => $testData,
         ]);
     }
 
