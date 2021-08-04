@@ -1,4 +1,5 @@
 import apiFetch from '@wordpress/api-fetch';
+import { nanoid } from 'nanoid';
 import doNotTrack from './doNotTrack';
 
 function handleTracking(
@@ -11,7 +12,7 @@ function handleTracking(
 
     if (!url) return;
 
-    navigator.sendBeacon(`${ABTestingForWP.restUrl}ab-testing-for-wp/v1/outbound`, JSON.stringify({ url }));
+    navigator.sendBeacon(`${ABTestingForWP.restUrl}ab-testing-for-wp/v1/outbound?nocache=${nanoid()}`, JSON.stringify({ url }));
   };
 }
 
@@ -32,7 +33,7 @@ function handleTestTracking(): void {
 
   // track every page
   if (ABTestingForWP.postId) {
-    apiFetch({ path: `ab-testing-for-wp/v1/track?post=${ABTestingForWP.postId}` });
+    apiFetch({ path: `ab-testing-for-wp/v1/track?post=${ABTestingForWP.postId}&nocache=${nanoid()}` });
   }
 }
 

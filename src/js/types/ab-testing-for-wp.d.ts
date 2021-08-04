@@ -91,3 +91,18 @@ declare interface TestData {
   isEnabled: boolean;
   variants: TestVariant[];
 }
+
+declare interface ABTestInterface {
+  blockEl: Element;
+  testId: string | undefined;
+  doNotTrack: boolean;
+  cookieName?: string;
+  localStorageKey?: string;
+  variantId?: string | number;
+  variant?: TestVariant;
+}
+
+declare interface CookieData {
+  variantId: string | number;
+  tracked: string;
+}
