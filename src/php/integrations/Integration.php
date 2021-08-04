@@ -34,22 +34,26 @@ class Integration {
     protected function addCustomQuery($type = '', $query = '', $transform = false) {
         if ($query === '') return;
 
+        $this->type = $type;
+        $this->query = $query;
+        $this->transform = $transform;
+
         add_filter(
             "ab-testing-for-wp_custom-query-{$type}",
-            function () use ($query, $transform) {
-                $this->performCustomQuery($query, $transform);
-            },
+            array($this, 'performCustomQuery'),
             10,
             0
         );
     }
 
-    public function performCustomQuery($query, $transform) {
-        $results = $this->wpdb->get_results(str_replace('%s', $this->wpdb->prefix, $query));
+    public function performCustomQuery() {
+        $results = $this->wpdb->get_results(str_replace('%s', $this->wpdb->prefix, $this->query));
 
-        if (!$transform) return $results;
+        if ($this->transform) {
+            return array_map($this->transform, $results);
+        }
 
-        return array_map($transform, $results);
+        return $results;
     }
 
     /**
