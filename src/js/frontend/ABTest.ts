@@ -8,9 +8,11 @@ export default class ABTest implements ABTestInterface {
 
   testId: string | undefined;
 
-  cookieName?: string;
+  goal: string | undefined;
 
-  localStorageKey?: string;
+  goalType: string | undefined;
+
+  cookieName?: string;
 
   variantId?: string | number;
 
@@ -22,9 +24,10 @@ export default class ABTest implements ABTestInterface {
     this.blockEl = blockEl;
     this.doNotTrack = doNotTrack();
     this.testId = this.blockEl.dataset.test;
+    this.goal = this.blockEl.dataset.goal;
+    this.goalType = this.blockEl.dataset.goalType;
     if (this.testId) {
       this.cookieName = getCookieName(this.testId);
-      this.localStorageKey = `${this.cookieName}_html`;
     }
 
     this.handleRender()
@@ -36,10 +39,6 @@ export default class ABTest implements ABTestInterface {
   handleRender = async (): Promise<boolean> => {
     let html = '';
     let hasCookie = false;
-
-    if (!this.doNotTrack && this.localStorageKey) {
-      html = window.localStorage.getItem(this.localStorageKey) || '';
-    }
 
     if (!html && this.testId) {
       let path = `ab-testing-for-wp/v1/ab-test?test=${this.testId}&nocache=${nanoid()}`;
@@ -53,7 +52,7 @@ export default class ABTest implements ABTestInterface {
         }
       }
 
-      // get variant from server
+      // Get variant from server.
       this.variant = await apiFetch({ path });
       if (this.variant) {
         html = this.variant.html;
@@ -64,16 +63,9 @@ export default class ABTest implements ABTestInterface {
       // Update the block's html with the chosen variant.
       this.blockEl.innerHTML = html;
 
-      if (!this.doNotTrack) {
-        // Store the variant's html in localStorage for quick retrieval next time.
-        if (this.localStorageKey) {
-          window.localStorage.setItem(this.localStorageKey, html);
-        }
-
-        // Set a cookie with the variant id, if it hasn't already been set.
-        if (!hasCookie && this.cookieName && this.variant) {
-          setCookieData(this.testId, this.variant.id);
-        }
+      // Set a cookie with the variant id, if it hasn't already been set.
+      if (!this.doNotTrack && !hasCookie && this.cookieName && this.variant) {
+        setCookieData(this.testId, this.variant.id, 'P');
       }
     }
 
@@ -83,26 +75,51 @@ export default class ABTest implements ABTestInterface {
     return true;
   }
 
-  sendBeacon = (url: string | undefined): void => {
-    if (url && (!navigator.sendBeacon || !ABTestingForWP.restUrl)) {
-      navigator.sendBeacon(`${ABTestingForWP.restUrl}ab-testing-for-wp/v1/outbound?nocache=${nanoid()}`, JSON.stringify({ url }));
+  trackLink = async (url: string | undefined): Promise<boolean> => {
+    if (url) {
+      const { variantId, tracked } = getCookieData(this.testId);
+      if (tracked !== 'C') {
+        const isTrackedInDB = await apiFetch({
+          path: `ab-testing-for-wp/v1/track?nocache=${nanoid()}`,
+          method: 'POST',
+          data: {
+            url,
+            variantId,
+            goal: this.goal,
+            goalType: this.goalType,
+          },
+        });
+
+        if (isTrackedInDB && this.cookieName && this.variant) {
+          // Set a cookie with the variant id, if it hasn't already been set.
+          setCookieData(this.testId, this.variant.id, 'C');
+        }
+      }
     }
+
+    return true;
   }
 
   handleTracking = (): void => {
-    apiFetch({ path: `ab-testing-for-wp/v1/track?post=${ABTestingForWP.postId}&nocache=${nanoid()}` });
+    if (doNotTrack()) {
+      return;
+    }
 
     const anchors = Array.from(this.blockEl.querySelectorAll('a'));
     anchors.forEach((anchor) => {
-      anchor.addEventListener('click', () => {
-        this.sendBeacon(anchor.href);
+      anchor.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.trackLink(anchor.href)
+          .then(() => {
+            window.location = anchor.href;
+          });
       });
     });
 
     const forms = Array.from(this.blockEl.querySelectorAll('form'));
     forms.forEach((form) => {
-      form.addEventListener('submit', () => {
-        this.sendBeacon(form.action);
+      form.addEventListener('submit', (e) => {
+        this.trackLink(form.action);
       });
     });
   }

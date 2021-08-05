@@ -95,9 +95,10 @@ declare interface TestData {
 declare interface ABTestInterface {
   blockEl: Element;
   testId: string | undefined;
+  goal: string | undefined;
+  goalType: string | undefined;
   doNotTrack: boolean;
   cookieName?: string;
-  localStorageKey?: string;
   variantId?: string | number;
   variant?: TestVariant;
 }

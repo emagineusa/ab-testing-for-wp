@@ -90,7 +90,7 @@ class CookieManager {
 
                 if (isset($data[$testId])) {
                     return [
-                        'variant' => $data[$testId],
+                        'variantId' => $data[$testId],
                         'tracked' => in_array($data[$testId], $data['tracked']) ? 'P' : 'C'
                     ];
                 }
@@ -101,7 +101,7 @@ class CookieManager {
                 list($variant, $tracked) = explode(":", self::getCookie($testId));
 
                 return [
-                    'variant' => $variant,
+                    'variantId' => $variant,
                     'tracked' => $tracked
                 ];
             }

@@ -74,11 +74,11 @@ class BlockRenderer {
                 if ($variant['id'] === $variantId) {
                     $pickedVariant = $variant;
 
-                    if ($hasCookieData && $cookieData['variant'] !== $pickedVariant['id']) {
+                    if ($hasCookieData && $cookieData['variantId'] !== $pickedVariant['id']) {
                         // if not already tracked as converted
                         if ($cookieData['tracked'] !== 'C') {
                             // swap participation
-                            $abTestManager->addTracking($cookieData['variant'], 'S');
+                            $abTestManager->addTracking($cookieData['variantId'], 'S');
                             $abTestManager->addTracking($pickedVariant['id'], 'P');
                         }
 
@@ -94,7 +94,7 @@ class BlockRenderer {
             if (CookieManager::isAvailable($testId)) {
                 // make sure variant is still in variants
                 foreach ($variants as $variant) {
-                    if ($variant['id'] === $cookieData['variant']) {
+                    if ($variant['id'] === $cookieData['variantId']) {
                         return $variant;
                     }
                 }
@@ -125,11 +125,8 @@ class BlockRenderer {
         return $variants[0];
     }
 
-    private function wrapData($testId, $controlContent) {
-        return
-            '<div class="ABTestWrapper" data-test="' . $testId . '">'
-                . $controlContent
-            . '</div>';
+    private function wrapData($attributes, $controlContent) {
+        return "<div class='ABTestWrapper' data-test='{$attributes['id']}' data-goal='{$attributes['postGoal']}' data-goal-type='{$attributes['postGoalType']}'>{$controlContent}</div>";
     }
 
     public function resolveVariant($request) {
@@ -169,7 +166,7 @@ class BlockRenderer {
         // find out if already in a variant
         if (CookieManager::isAvailable($testId)) {
             $cookieData = CookieManager::getData($testId);
-            $skipVariation = $cookieData['variant'];
+            $skipVariation = $cookieData['variantId'];
         }
 
         // get control variant of the test
@@ -240,10 +237,10 @@ class BlockRenderer {
 
         if (CookieManager::isAvailable($testId)) {
             $cookieData = CookieManager::getData($testId);
-            $variantId = $cookieData['variant'];
+            $variantId = $cookieData['variantId'];
         }
 
-        return $this->wrapData($testId, $this->getVariantContent($content, $variantId));
+        return $this->wrapData($attributes, $this->getVariantContent($content, $variantId));
     }
 
     public function renderInsertedTest($attributes) {
