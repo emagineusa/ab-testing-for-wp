@@ -8,13 +8,15 @@ export default class ABTest implements ABTestInterface {
 
   testId: string | undefined;
 
+  controlVariantId: string | undefined;
+
   goal: string | undefined;
 
   goalType: string | undefined;
 
   cookieName?: string;
 
-  variantId?: string | number;
+  variantId?: string;
 
   variant?: TestVariant;
 
@@ -24,6 +26,7 @@ export default class ABTest implements ABTestInterface {
     this.blockEl = blockEl;
     this.doNotTrack = doNotTrack();
     this.testId = this.blockEl.dataset.test;
+    this.controlVariantId = this.blockEl.dataset.control;
     this.goal = this.blockEl.dataset.goal;
     this.goalType = this.blockEl.dataset.goalType;
     if (this.testId) {
@@ -37,34 +40,26 @@ export default class ABTest implements ABTestInterface {
   }
 
   handleRender = async (): Promise<boolean> => {
-    let html = '';
-    let hasCookie = false;
-
-    if (!html && this.testId) {
+    if (this.testId && !this.doNotTrack) {
+      let hasCookie = false;
       let path = `ab-testing-for-wp/v1/ab-test?test=${this.testId}&nocache=${nanoid()}`;
-
-      if (!this.doNotTrack) {
-        const { variantId } = getCookieData(this.testId);
-        if (variantId) {
-          hasCookie = true;
-          // Append variant param to get the same HTML the user saw when they were cookied.
-          path += `&variant=${variantId}`;
-        }
+      const { variantId } = getCookieData(this.testId);
+      if (variantId) {
+        hasCookie = true;
+        // Append variant param to get the same HTML the user saw when they were cookied.
+        path += `&variant=${variantId}`;
       }
 
       // Get variant from server.
       this.variant = await apiFetch({ path });
-      if (this.variant) {
-        html = this.variant.html;
-      }
-    }
 
-    if (html) {
-      // Update the block's html with the chosen variant.
-      this.blockEl.innerHTML = html;
+      // If we have a variant, and it's not the control, then update the html.
+      if (this.variant && this.variant.id !== this.controlVariantId) {
+        this.blockEl.innerHTML = this.variant.html;
+      }
 
       // Set a cookie with the variant id, if it hasn't already been set.
-      if (!this.doNotTrack && !hasCookie && this.cookieName && this.variant) {
+      if (!hasCookie && this.cookieName && this.variant) {
         setCookieData(this.testId, this.variant.id, 'P');
       }
     }
@@ -119,6 +114,7 @@ export default class ABTest implements ABTestInterface {
     const forms = Array.from(this.blockEl.querySelectorAll('form'));
     forms.forEach((form) => {
       form.addEventListener('submit', (e) => {
+        e.preventDefault();
         this.trackLink(form.action);
       });
     });

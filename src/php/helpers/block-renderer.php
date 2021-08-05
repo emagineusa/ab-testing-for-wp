@@ -126,7 +126,7 @@ class BlockRenderer {
     }
 
     private function wrapData($attributes, $controlContent) {
-        return "<div class='ABTestWrapper' data-test='{$attributes['id']}' data-goal='{$attributes['postGoal']}' data-goal-type='{$attributes['postGoalType']}'>{$controlContent}</div>";
+        return "<div class='ABTestWrapper' data-test='{$attributes['id']}' data-control='{$attributes['control']}' data-goal='{$attributes['postGoal']}' data-goal-type='{$attributes['postGoalType']}'>{$controlContent}</div>";
     }
 
     public function resolveVariant($request) {
